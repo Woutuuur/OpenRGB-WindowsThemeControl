@@ -1,5 +1,7 @@
+import time
 from functools import partial
 from typing import Callable
+
 import openrgb
 from openrgb.utils import RGBColor
 
@@ -31,6 +33,7 @@ class Color():
         return self.r == other.r and self.g == other.g and self.b == other.b
 
 class WindowsApiHelper:
+    @staticmethod
     def get_accent_color():
         try:
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\DWM") as key:
@@ -73,6 +76,7 @@ class ThemeChangeListener:
             0, 0, wc.hInstance, None
         )
         self.on_theme_change = on_theme_change
+        self.running = False
 
     def wnd_proc(self, hwnd, msg, wparam, lparam):
         if msg == win32con.WM_SETTINGCHANGE:
@@ -85,7 +89,13 @@ class ThemeChangeListener:
         return 0
 
     def run(self):
-        win32gui.PumpMessages()
+        while True:
+            win32gui.PumpWaitingMessages()
+
+            try:
+                time.sleep(0.1)
+            except KeyboardInterrupt:
+                break
 
 def apply_color_to_openrgb(client: OpenRGBClient, color: Color):
     global current_color
